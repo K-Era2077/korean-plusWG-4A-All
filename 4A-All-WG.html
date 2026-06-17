@@ -1,0 +1,473 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한국어 단어 퀴즈 — 서울대 한국어 4A 3과</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --card2: #22263a;
+    --accent: #7c6fff;
+    --accent2: #ff6b9d;
+    --accent3: #43e8b0;
+    --accent4: #ffd166;
+    --text: #f0f0f8;
+    --sub: #8888aa;
+    --btn-h: 56px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Nunito', 'Noto Sans KR', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 48px;
+  }
+  .lang-screen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,11,18,0.97);
+    z-index: 200;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .lang-screen.show { display: flex; }
+  .lang-screen h2 { font-size: 26px; font-weight: 900; color: var(--text); margin-bottom: 4px; letter-spacing: -0.5px; }
+  .lang-screen p  { color: var(--sub); font-size: 14px; margin-bottom: 8px; }
+  .lang-grid { display: flex; flex-direction: column; gap: 12px; width: 300px; }
+  .pick-btn {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 22px;
+    background: var(--card2);
+    border: 2px solid transparent;
+    border-radius: 16px;
+    cursor: pointer;
+    font-family: inherit; font-size: 17px; font-weight: 700; color: var(--text);
+    transition: all 0.18s;
+  }
+  .pick-btn .flag { font-size: 26px; }
+  .pick-btn:hover { border-color: var(--accent); background: rgba(124,111,255,0.14); }
+  .header { width: 100%; max-width: 560px; text-align: center; margin-bottom: 18px; }
+  .header h1 { font-size: 21px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 3px; }
+  .header p  { font-size: 13px; color: var(--sub); margin-bottom: 16px; }
+  .lang-tabs { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .lang-tab {
+    display: flex; align-items: center; gap: 6px;
+    padding: 9px 18px;
+    border-radius: 50px;
+    border: 2px solid transparent;
+    background: var(--card2);
+    color: var(--sub);
+    font-family: inherit; font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .lang-tab .flag { font-size: 18px; }
+  .lang-tab:hover { border-color: var(--accent); color: var(--text); }
+  .lang-tab.active-en { border-color: #7c6fff; background: rgba(124,111,255,0.15); color: #a99fff; }
+  .lang-tab.active-zh { border-color: #ffd166; background: rgba(255,209,102,0.15); color: #ffd166; }
+  .lang-tab.active-vi { border-color: #43e8b0; background: rgba(67,232,176,0.15);  color: #43e8b0; }
+  .lang-tab.active-mn { border-color: #ce93d8; background: rgba(206,147,216,0.15); color: #ce93d8; }
+  .lang-tab.active-ru { border-color: #ff8a65; background: rgba(255,138,101,0.15); color: #ff8a65; }
+  .lang-tab.reverse-en { border-color: #7c6fff; background: rgba(124,111,255,0.32); color: #a99fff; box-shadow: 0 0 0 2px rgba(124,111,255,0.35) inset; }
+  .lang-tab.reverse-zh { border-color: #ffd166; background: rgba(255,209,102,0.32); color: #ffd166; box-shadow: 0 0 0 2px rgba(255,209,102,0.35) inset; }
+  .lang-tab.reverse-vi { border-color: #43e8b0; background: rgba(67,232,176,0.32);  color: #43e8b0; box-shadow: 0 0 0 2px rgba(67,232,176,0.35) inset; }
+  .lang-tab.reverse-mn { border-color: #ce93d8; background: rgba(206,147,216,0.32); color: #ce93d8; box-shadow: 0 0 0 2px rgba(206,147,216,0.35) inset; }
+  .lang-tab.reverse-ru { border-color: #ff8a65; background: rgba(255,138,101,0.32); color: #ff8a65; box-shadow: 0 0 0 2px rgba(255,138,101,0.35) inset; }
+  .reverse-badge {
+    display: inline-block;
+    font-size: 10px; font-weight: 900;
+    background: rgba(255,255,255,0.18);
+    border-radius: 6px;
+    padding: 1px 5px; margin-left: 2px;
+    vertical-align: middle;
+  }
+  .q-direction {
+    font-size: 11px; font-weight: 700;
+    color: var(--sub);
+    text-align: center;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .quiz-card { width: 100%; max-width: 560px; background: var(--card); border-radius: 24px; padding: 26px 26px 22px; box-shadow: 0 8px 48px rgba(0,0,0,0.55); }
+  .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat-box { background: var(--card2); border-radius: 12px; padding: 10px 10px 9px; text-align: center; }
+  .stat-box .lbl { font-size: 11px; color: var(--sub); font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+  .stat-box .val { font-size: 22px; font-weight: 900; line-height: 1; }
+  #score-val { color: var(--accent4); }
+  #combo-val { color: var(--accent2); }
+  #wrong-val { color: #ff5757; }
+  .round-row { display: none; align-items: center; gap: 9px; margin-bottom: 12px; font-size: 12px; font-weight: 700; color: var(--sub); }
+  .round-row.visible { display: flex; }
+  .rbar-wrap { flex: 1; height: 5px; background: var(--card2); border-radius: 99px; overflow: hidden; }
+  .rbar-fill { height: 100%; background: linear-gradient(90deg, var(--accent3), var(--accent)); border-radius: 99px; transition: width 0.3s ease; width: 0%; }
+  #round-lbl { white-space: nowrap; color: var(--accent3); }
+  #round-cnt { white-space: nowrap; }
+  .timer-wrap { height: 6px; background: var(--card2); border-radius: 99px; overflow: hidden; margin-bottom: 22px; }
+  .timer-fill { height: 100%; width: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.1s linear, background 0.5s; }
+  .timer-fill.danger { background: linear-gradient(90deg, #ff4d4d, #ff9900); }
+  .q-area { min-height: 76px; display: flex; align-items: center; justify-content: center; margin-bottom: 22px; }
+  .q-word { font-size: 30px; font-weight: 900; text-align: center; line-height: 1.25; letter-spacing: -0.5px; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt-btn {
+    min-height: var(--btn-h);
+    border-radius: 12px;
+    border: 2px solid var(--card2);
+    background: var(--card2);
+    color: var(--text);
+    font-family: inherit; font-size: 15px; font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    padding: 10px 18px;
+    text-align: left;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+  .opt-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(124,111,255,0.1); }
+  .opt-btn.correct { border-color: var(--accent3); background: rgba(67,232,176,0.17); color: var(--accent3); animation: pulse-ok 0.3s ease; }
+  .opt-btn.wrong   { border-color: #ff5757; background: rgba(255,87,87,0.14); color: #ff5757; animation: shake 0.35s ease; }
+  .opt-btn:disabled { cursor: default; }
+  .feedback { min-height: 26px; margin-top: 15px; font-size: 15px; font-weight: 700; text-align: center; }
+  .feedback.ok    { color: var(--accent3); }
+  .feedback.bad   { color: #ff5757; }
+  .feedback.combo { color: var(--accent4); font-size: 17px; animation: bounce 0.4s alternate infinite; }
+  .cel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.78); z-index: 300; justify-content: center; align-items: center; }
+  .cel-overlay.show { display: flex; }
+  .cel-box { background: var(--card); border: 2px solid var(--accent4); border-radius: 24px; padding: 44px 38px; text-align: center; animation: pop 0.5s cubic-bezier(0.175,0.885,0.32,1.275); max-width: 360px; width: 90%; }
+  .cel-box h1 { font-size: 34px; color: var(--accent4); margin-bottom: 10px; line-height: 1.2; }
+  .cel-box p  { font-size: 17px; color: var(--text); margin-bottom: 26px; line-height: 1.5; }
+  .cel-box button { background: var(--accent4); border: none; color: #1a1400; font-family: inherit; font-size: 16px; font-weight: 900; padding: 13px 32px; border-radius: 50px; cursor: pointer; transition: opacity 0.2s; }
+  .cel-box button:hover { opacity: 0.85; }
+  @keyframes pop      { from { transform: scale(0.5); opacity:0; } to { transform: scale(1); opacity:1; } }
+  @keyframes bounce   { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+  @keyframes shake    { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  @keyframes pulse-ok { 0%{transform:scale(1)} 50%{transform:scale(1.03)} 100%{transform:scale(1)} }
+</style>
+</head>
+<body>
+
+<div class="lang-screen show" id="lang-screen">
+  <h2>🌍 언어를 선택하세요</h2>
+  <p>한국어 단어를 어느 언어로 학습할까요?</p>
+  <div class="lang-grid">
+    <button class="pick-btn" onclick="pickLang('en')"><span class="flag">🇺🇸</span> English (영어)</button>
+    <button class="pick-btn" onclick="pickLang('zh')"><span class="flag">🇨🇳</span> 中文 (중국어)</button>
+    <button class="pick-btn" onclick="pickLang('vi')"><span class="flag">🇻🇳</span> Tiếng Việt (베트남어)</button>
+    <button class="pick-btn" onclick="pickLang('mn')"><span class="flag">🇲🇳</span> Монгол (몽골어)</button>
+    <button class="pick-btn" onclick="pickLang('ru')"><span class="flag">🇷🇺</span> Русский (러시아어)</button>
+  </div>
+</div>
+
+<div class="header">
+  <h1>🧠 한국어 단어 퀴즈</h1>
+  <p>서울대 한국어 4A 3과 · 746개 단어 · 학습 언어를 골라 퀴즈를 시작하세요</p>
+  <div class="lang-tabs">
+    <button class="lang-tab" id="tab-en" onclick="switchLang('en')"><span class="flag">🇺🇸</span> EN</button>
+    <button class="lang-tab" id="tab-zh" onclick="switchLang('zh')"><span class="flag">🇨🇳</span> 中文</button>
+    <button class="lang-tab" id="tab-vi" onclick="switchLang('vi')"><span class="flag">🇻🇳</span> Việt</button>
+    <button class="lang-tab" id="tab-mn" onclick="switchLang('mn')"><span class="flag">🇲🇳</span> Монгол</button>
+    <button class="lang-tab" id="tab-ru" onclick="switchLang('ru')"><span class="flag">🇷🇺</span> РУ</button>
+  </div>
+</div>
+
+<div class="quiz-card" id="quiz-card" style="display:none">
+  <div class="stats">
+    <div class="stat-box"><div class="lbl">점수</div><div class="val" id="score-val">0</div></div>
+    <div class="stat-box"><div class="lbl">연속 정답 🔥</div><div class="val" id="combo-val">0</div></div>
+    <div class="stat-box"><div class="lbl">연속 오답 💀</div><div class="val" id="wrong-val">0</div></div>
+  </div>
+  <div class="round-row" id="round-row">
+    <span id="round-lbl">라운드 1</span>
+    <div class="rbar-wrap"><div class="rbar-fill" id="rbar-fill"></div></div>
+    <span id="round-cnt">0/0</span>
+  </div>
+  <div class="timer-wrap"><div class="timer-fill" id="timer-fill"></div></div>
+  <div class="q-area">
+    <div>
+      <div class="q-direction" id="q-direction"></div>
+      <div class="q-word" id="q-word">—</div>
+    </div>
+  </div>
+  <div class="options" id="options"></div>
+  <div class="feedback" id="feedback"></div>
+</div>
+
+<div class="cel-overlay" id="cel-overlay">
+  <div class="cel-box">
+    <h1 id="cel-title">🎉</h1>
+    <p  id="cel-msg"></p>
+    <button onclick="closeCelebration()">계속하기 ➔</button>
+  </div>
+</div>
+
+<script>
+let wordData = [];
+
+function dataCallback(data) {
+  wordData = data;
+}
+
+const MILESTONE_MSGS = {
+  50:  { title:'🎉 대단해요! 팡파레! 🎉',     msg: pts => `목표 점수 [ ${pts}점 ] 도달!` },
+  100: { title:'👑 단어 마스터 등극! 👑',     msg: pts => `꿈의 점수 ${pts}점 돌파! 대단해요!` },
+  200: { title:'💎 단어 고수 등극! 💎',       msg: pts => `놀라운 실력! ${pts}점 돌파! 멈출 수 없죠?` },
+  300: { title:'🏆 전설의 단어왕! 🏆',       msg: pts => `믿을 수 없어요! ${pts}점 달성! 당신은 전설입니다!` },
+  500: { title:'🚀 우주급 단어 천재! 🚀',    msg: pts => `${pts}점?! 이건 인간의 영역을 넘어섰습니다!!` }
+};
+
+let currentLang = null;
+let isReverse = false;
+let score = 0, combo = 0, wrongStreak = 0;
+let currentQ = null;
+let timeLeft = 50, timerInt = null, penaltyDone = false;
+let isPaused = false;
+let milestones = {};
+let shuffleQueue = [];
+let roundCount = 0;
+
+const LANG_LABELS = { en: 'English', zh: '中文', vi: 'Tiếng Việt', mn: 'Монгол', ru: 'Русский' };
+
+function buildQueue(pool) {
+  const idx = pool.map((_,i) => i);
+  for (let i = idx.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [idx[i], idx[j]] = [idx[j], idx[i]];
+  }
+  return idx;
+}
+
+function popNextWord(pool) {
+  if (shuffleQueue.length === 0) {
+    roundCount++;
+    shuffleQueue = buildQueue(pool);
+    if (roundCount > 1) showFeedback(`🔄 ${roundCount}번째 라운드 시작! 모든 단어를 다시 섞었습니다.`, 'ok');
+  }
+  return pool[shuffleQueue.shift()];
+}
+
+function updateRoundBar(total) {
+  const row = document.getElementById('round-row');
+  row.classList.add('visible');
+  const done = total - shuffleQueue.length;
+  document.getElementById('round-lbl').textContent = `라운드 ${roundCount}`;
+  document.getElementById('rbar-fill').style.width = Math.round((done / total) * 100) + '%';
+  document.getElementById('round-cnt').textContent = `${done}/${total}`;
+}
+
+function pickLang(lang) {
+  document.getElementById('lang-screen').classList.remove('show');
+  isReverse = false;
+  startWithLang(lang);
+}
+
+function switchLang(lang) {
+  clearInterval(timerInt);
+  if (currentLang === lang) {
+    isReverse = !isReverse;
+  } else {
+    isReverse = false;
+  }
+  startWithLang(lang);
+}
+
+function updateTabUI() {
+  document.querySelectorAll('.lang-tab').forEach(b => {
+    const old = b.querySelector('.reverse-badge');
+    if (old) old.remove();
+    b.className = 'lang-tab';
+  });
+  const tab = document.getElementById('tab-' + currentLang);
+  tab.classList.add(isReverse ? 'reverse-' + currentLang : 'active-' + currentLang);
+  if (isReverse) {
+    const badge = document.createElement('span');
+    badge.className = 'reverse-badge';
+    badge.textContent = '⇄';
+    tab.appendChild(badge);
+  }
+}
+
+function startWithLang(lang) {
+  currentLang = lang;
+  updateTabUI();
+  document.getElementById('quiz-card').style.display = 'block';
+  score = 0; combo = 0; wrongStreak = 0;
+  milestones = { 50:false, 100:false, 200:false, 300:false, 500:false };
+  const pool = wordData.filter(w => w[lang]);
+  shuffleQueue = buildQueue(pool);
+  roundCount = 1;
+  updateStats();
+  nextQ();
+}
+
+function updateStats() {
+  document.getElementById('score-val').textContent = score;
+  document.getElementById('combo-val').textContent = combo;
+  document.getElementById('wrong-val').textContent = wrongStreak;
+}
+
+function nextQ() {
+  if (isPaused) return;
+  clearInterval(timerInt);
+  penaltyDone = false; timeLeft = 50;
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback'; fb.textContent = '';
+  const pool = wordData.filter(w => w[currentLang]);
+  currentQ = popNextWord(pool);
+  updateRoundBar(pool.length);
+
+  const dirEl = document.getElementById('q-direction');
+  dirEl.textContent = isReverse
+    ? `${LANG_LABELS[currentLang]} → 한국어`
+    : `한국어 → ${LANG_LABELS[currentLang]}`;
+
+  let correct, getOpt;
+  if (isReverse) {
+    document.getElementById('q-word').textContent = currentQ[currentLang];
+    correct = currentQ.ko;
+    getOpt = w => w.ko;
+  } else {
+    document.getElementById('q-word').textContent = currentQ.ko;
+    correct = currentQ[currentLang];
+    getOpt = w => w[currentLang];
+  }
+
+  const opts = [correct];
+  while (opts.length < 4) {
+    const rand = getOpt(pool[Math.floor(Math.random() * pool.length)]);
+    if (rand && !opts.includes(rand)) opts.push(rand);
+  }
+  opts.sort(() => Math.random() - 0.5);
+  const container = document.getElementById('options');
+  container.innerHTML = '';
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => checkAnswer(opt, btn, correct));
+    container.appendChild(btn);
+  });
+  startTimer();
+}
+
+function startTimer() {
+  const fill = document.getElementById('timer-fill');
+  fill.style.width = '100%';
+  fill.classList.remove('danger');
+  timerInt = setInterval(() => {
+    if (isPaused) return;
+    timeLeft--;
+    fill.style.width = (timeLeft / 50 * 100) + '%';
+    if (timeLeft < 20) fill.classList.add('danger');
+    if (timeLeft < 20 && !penaltyDone) {
+      penaltyDone = true;
+      score = Math.max(0, score - 1);
+      updateStats();
+      showFeedback('⏱️ 3초 경과! (-1점)', 'bad');
+    }
+    if (timeLeft <= 0) { clearInterval(timerInt); onTimeout(); }
+  }, 100);
+}
+
+function onTimeout() {
+  combo = 0; wrongStreak++;
+  if (wrongStreak % 2 === 0 && wrongStreak > 0) {
+    score = Math.max(0, score - 1);
+    showFeedback('🚨 시간 초과 + 연속 오답 감점! (-1점)', 'bad');
+  } else {
+    showFeedback('⏰ 시간 초과! 다음 문제로 넘어갑니다.', 'bad');
+  }
+  updateStats(); disableOpts();
+  setTimeout(nextQ, 1300);
+}
+
+function checkAnswer(selected, btn, correct) {
+  if (isPaused) return;
+  clearInterval(timerInt); disableOpts();
+  const allBtns = document.querySelectorAll('.opt-btn');
+  if (selected === correct) {
+    btn.classList.add('correct');
+    wrongStreak = 0; combo++;
+    let added = 1;
+    if (combo === 2)     { added = 3; showFeedback('🎉 2연속 콤보! (+3점)', 'combo'); }
+    else if (combo >= 3) { added = 5; showFeedback(`🔥 ${combo}연속 콤보 대박! (+5점)`, 'combo'); }
+    else                 { showFeedback('정답입니다! 👍 (+1점)', 'ok'); }
+    score += added; updateStats();
+    if (checkMilestone()) return;
+  } else {
+    btn.classList.add('wrong');
+    allBtns.forEach(b => { if (b.textContent === correct) b.classList.add('correct'); });
+    combo = 0; wrongStreak++;
+    if (wrongStreak >= 2 && wrongStreak % 2 === 0) {
+      score = Math.max(0, score - 1);
+      showFeedback(`틀렸습니다! 연속 오답 감점 💀 (-1점)  정답: ${correct}`, 'bad');
+    } else {
+      showFeedback(`틀렸습니다! ❌  정답: ${correct}`, 'bad');
+    }
+    updateStats();
+  }
+  setTimeout(nextQ, 1600);
+}
+
+function disableOpts() { document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true); }
+
+function showFeedback(msg, cls) {
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback ' + cls;
+  fb.textContent = msg;
+}
+
+function checkMilestone() {
+  for (const t of [50, 100, 200, 300, 500]) {
+    if (score >= t && !milestones[t]) {
+      milestones[t] = true; triggerCelebration(t); return true;
+    }
+  }
+  return false;
+}
+
+function triggerCelebration(pts) {
+  isPaused = true; clearInterval(timerInt); playFanfare();
+  const m = MILESTONE_MSGS[pts];
+  document.getElementById('cel-title').textContent = m.title;
+  document.getElementById('cel-msg').textContent   = m.msg(pts);
+  document.getElementById('cel-overlay').classList.add('show');
+}
+
+function closeCelebration() {
+  document.getElementById('cel-overlay').classList.remove('show');
+  isPaused = false; nextQ();
+}
+
+function playFanfare() {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return;
+  const ctx = new AC();
+  const notes = [261.63, 329.63, 392.00, 523.25];
+  const now = ctx.currentTime;
+  notes.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, now + i * 0.12);
+    gain.gain.setValueAtTime(0.2, now + i * 0.12);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.12 + 0.6);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(now + i * 0.12); osc.stop(now + i * 0.12 + 0.6);
+  });
+}
+</script>
+
+<script src="words_4A-All-WG.js"></script>
+</body>
+</html>
+
